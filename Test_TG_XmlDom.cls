@@ -25,19 +25,47 @@ private class Test_TG_XmlDom {
 									 + ' </book> ' 
 								 + ' </bookstore> ';
 								 	
-    static testMethod void basicTest() {
-    	TG_XmlDom dom = new TG_XmlDom(sampleXml);
-    	TG_XmlDom.Element root = dom.root;
-    	List<TG_XmlDom.Element> books = root.getElementsByTagName('book');
+    static testMethod void testGetElementsByTagName() {
+		TG_XmlDom dom = new TG_XmlDom(sampleXml);
+    	TG_XmlDomElement root = dom.root;
+    	List<TG_XmlDomElement> books = root.getElementsByTagName('book');
     	System.assertEquals(2, books.size());
-    	System.assertEquals('CHILDREN', books[0].getAttribute('category'));
-    	System.assertEquals('WEB', books[1].getAttribute('category'));
-
-    	List<TG_XmlDom.Element> titles = root.getElementsByTagName('title', false);
+    	// with uptoLead flag as false
+    	List<TG_XmlDomElement> titles = root.getElementsByTagName('title', 1, TG_XmlDomElement.MAX_ELEMENTS_TILL_LEAF);
     	System.assertEquals(0, titles.size());
+    	// this should digg till leaf for a tag
+    	titles = root.getElementsByTagName('title', 2, TG_XmlDomElement.MAX_ELEMENTS_TILL_LEAF);
+    	System.assertEquals(2, titles.size());
     	
     	titles = root.getElementsByTagName('title');
     	System.assertEquals(2, titles.size());
-	    	
+    	
+    	titles = root.getElementsByTagName('title', TG_XmlDomElement.DEPTH_TILL_LEAF, 1);
+    	System.assertEquals(1, titles.size());	    		    	
+    }
+
+	static testMethod void testGetElementByTagName() {
+		TG_XmlDom dom = new TG_XmlDom(sampleXml);
+    	TG_XmlDomElement root = dom.root;
+    	TG_XmlDomElement book = root.getElementByTagName('book');
+    	System.assertNotEquals(null, book);
+	}
+	
+	static testMethod void testNodeName() {
+		TG_XmlDom dom = new TG_XmlDom(sampleXml);
+    	TG_XmlDomElement root = dom.root;
+    	System.assertEquals('bookstore', root.nodeName);
+    	TG_XmlDomElement book = root.getElementByTagName('book');
+    	System.assertNotEquals(null, book);
+    	System.assertEquals('book', book.nodeName);
+	}   
+	 								 	
+    static testMethod void testGetAttribute() {
+    	TG_XmlDom dom = new TG_XmlDom(sampleXml);
+    	TG_XmlDomElement root = dom.root;
+    	List<TG_XmlDomElement> books = root.getElementsByTagName('book');
+    	System.assertEquals(2, books.size());
+    	System.assertEquals('CHILDREN', books[0].getAttribute('category'));
+    	System.assertEquals('WEB', books[1].getAttribute('category'));
     }
 }
