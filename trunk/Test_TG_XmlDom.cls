@@ -1,71 +1,63 @@
+/*
+Copyright (c) 2010 tgerm.com
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+
+1. Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+3. The name of the author may not be used to endorse or promote products
+   derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR
+IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, 
+INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 /**
-	Simple Wrapper over Spring 10 Apex DOM Classes. This class will try avoiding complexity involved in using Apex DOM classes.
-	You can get the source and more details at the google project hosting.
 	Google Code Project : https://code.google.com/p/apex-fast-xml-dom/
 	TODO: add links to API docs 
-	
 	@author Abhinav(https://www.tgerm.com)	
 */
 @isTest
 private class Test_TG_XmlDom {
-
-	// Used example XML from http://www.w3schools.com/dom/books.xml
-	public static String sampleXml = '<bookstore>'   
-									 + ' <book xmlns:c="http://www.w3schools.com/children/" category="CHILDREN">' 
-										 + ' <c:title c:lang="en">Harry Potter</c:title>' 
-										 + ' <c:author>J K. Rowling</c:author> ' 
-										 + ' <c:year>2005</c:year> ' 
-										 + ' <c:price>29.99</c:price> ' 
-									 + ' </book> ' 
-									 + ' <book xmlns:x="http://www.w3schools.com/xml/" category="WEB"> ' 
-										 + ' <x:title x:lang="en">Learning XML</x:title> ' 
-										 + ' <x:author>Erik T. Ray</x:author> ' 
-										 + ' <x:year>2003</x:year> ' 
-										 + ' <x:price>39.95</x:price> ' 
-									 + ' </book> ' 
-								 + ' </bookstore> ';
 								 	
-    static testMethod void testGetElementsByTagName() {
-		TG_XmlDom dom = new TG_XmlDom(sampleXml);
-    	TG_XmlDomElement root = dom.root;
-    	List<TG_XmlDomElement> books = root.getElementsByTagName('book');
-    	System.assertEquals(2, books.size());
-    	// with uptoLead flag as false
-    	List<TG_XmlDomElement> titles = root.getElementsByTagName('title', 1, TG_XmlDomElement.MAX_ELEMENTS_TILL_LEAF);
-    	System.assertEquals(0, titles.size());
-    	// this should digg till leaf for a tag
-    	titles = root.getElementsByTagName('title', 2, TG_XmlDomElement.MAX_ELEMENTS_TILL_LEAF);
-    	System.assertEquals(2, titles.size());
-    	
-    	titles = root.getElementsByTagName('title');
-    	System.assertEquals(2, titles.size());
-    	
-    	titles = root.getElementsByTagName('title', TG_XmlDomElement.DEPTH_TILL_LEAF, 1);
-    	System.assertEquals(1, titles.size());	    		    	
-    }
+ 	static testMethod void testCreateFromXml() {
+		TG_XmlDom dom = TG_XmlDom.createFromXml('<price>29.99</price>');
+		String asXml = dom.root.toXmlString();
+		System.assertEquals('<price>29.99</price>', asXml);     	
+	}
 
-	static testMethod void testGetElementByTagName() {
-		TG_XmlDom dom = new TG_XmlDom(sampleXml);
-    	TG_XmlDomElement root = dom.root;
-    	TG_XmlDomElement book = root.getElementByTagName('book');
-    	System.assertNotEquals(null, book);
+	static testMethod void testCreateForRootElement() {
+		TG_XmlDom dom = TG_XmlDom.createForRootElement('price');
+		System.assertEquals('price', dom.root.nodeName);     	
 	}
 	
-	static testMethod void testNodeName() {
-		TG_XmlDom dom = new TG_XmlDom(sampleXml);
-    	TG_XmlDomElement root = dom.root;
-    	System.assertEquals('bookstore', root.nodeName);
-    	TG_XmlDomElement book = root.getElementByTagName('book');
-    	System.assertNotEquals(null, book);
-    	System.assertEquals('book', book.nodeName);
-	}   
-	 								 	
-    static testMethod void testGetAttribute() {
-    	TG_XmlDom dom = new TG_XmlDom(sampleXml);
-    	TG_XmlDomElement root = dom.root;
-    	List<TG_XmlDomElement> books = root.getElementsByTagName('book');
-    	System.assertEquals(2, books.size());
-    	System.assertEquals('CHILDREN', books[0].getAttribute('category'));
-    	System.assertEquals('WEB', books[1].getAttribute('category'));
-    }
+	static testMethod void testCreateForRootElement2() {
+		TG_XmlDom dom = TG_XmlDom.createForRootElement('price', null, null);
+		System.assertEquals('price', dom.root.nodeName);     	
+	}
+	
+	static testMethod void testToXmlString() {
+		TG_XmlDom dom = TG_XmlDom.createFromXml('<price>29.99</price>');
+		System.assertEquals('<?xml version="1.0" encoding="UTF-8"?><price>29.99</price>', dom.toXmlString());     	
+	}
+	
+	static testMethod void testOwnerDocument() {
+		TG_XmlDom dom = TG_XmlDom.createFromXml('<price>29.99</price>');
+		System.assert(null != dom.ownerDocument);     	
+	}
+	
 }
