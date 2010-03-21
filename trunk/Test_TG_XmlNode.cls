@@ -71,6 +71,14 @@ private class Test_TG_XmlNode {
     	System.assertEquals(1, titles.size());	    		    	
     }
 
+    static testMethod void testGetElementsByTagNameNS() {
+		TG_XmlDom dom = new TG_XmlDom(sampleXml);
+    	TG_XmlNode root = dom.root;
+    	List<TG_XmlNode> titles = root.getElementsByTagNameNS('http://www.w3schools.com/children/','title');
+    	System.assertEquals(1, titles.size());
+    }
+
+
 	static testMethod void testGetElementByTagName() {
 		TG_XmlDom dom = new TG_XmlDom(sampleXml);
     	TG_XmlNode root = dom.root;
@@ -197,11 +205,6 @@ private class Test_TG_XmlNode {
  		System.assertEquals('WEB', category);
  	}
  	
- 	static testMethod void testOwnerDocument() {
-    	TG_XmlDom dom = new TG_XmlDom(sampleXml);
-    	System.assertEquals(dom.ownerDocument, dom.root.ownerDocument);
- 	}
- 	
  	static testMethod void testParentNode() {
  		TG_XmlDom dom = new TG_XmlDom(sampleXml);
     	TG_XmlNode root = dom.root;
@@ -277,5 +280,27 @@ private class Test_TG_XmlNode {
     	TG_XmlNode root = dom.root;
     	TG_XmlNode book = root.getElementByTagName('book');
     	System.assertEquals('http://www.w3schools.com/children/', book.lookupNamespaceURI('c'));
+ 	}
+ 	
+ 	static testMethod void testCloneNode() {
+ 		TG_XmlDom dom = new TG_XmlDom(sampleXml);
+    	TG_XmlNode root = dom.root;
+    	TG_XmlNode book = root.getElementByTagName('book');
+    	TG_XmlNode bookCloned = book.cloneNode(true);
+ 		System.assertEquals(book.xmlNode.getChildren().size(), bookCloned.xmlNode.getChildren().size());
+ 		System.assertEquals(book.getAttribute('category'), bookCloned.getAttribute('category'));
+ 		
+ 		TG_XmlNode title = book.getElementByTagName('title');
+ 		TG_XmlNode titleCloned = bookCloned.getElementByTagName('title');
+ 		
+ 		System.assertEquals(title.nodeValue, titleCloned.nodeValue);		
+ 		System.assertEquals(title.nodeType, titleCloned.nodeType);
+ 	
+ 		// Now lets try without deep cloning
+ 		bookCloned = book.cloneNode(false);
+ 		// No child should be there in the cloned node
+ 		System.assertEquals(0, bookCloned.xmlNode.getChildren().size());
+ 		// Attributes should be copied
+ 		System.assertEquals(book.getAttribute('category'), bookCloned.getAttribute('category'));
  	}
 }

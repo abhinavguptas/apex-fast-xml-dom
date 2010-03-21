@@ -48,12 +48,12 @@ public class TG_XmlDom {
 	public TG_XmlDom(String xml) {
 		domDoc.load(xml);
 		Dom.XmlNode rootXmlNode = domDoc.getRootElement();
-		root = new TG_XmlNode(rootXmlNode, ownerDocument); 
+		root = new TG_XmlNode(rootXmlNode); 
 	}
 	
 	public TG_XmlDom(String rootElementName, String rootElementNamespace, String rootElementPrefix) { 
 		Dom.XmlNode rootXmlNode  = domDoc.createRootElement(rootElementName, rootElementNamespace, rootElementPrefix);
-		root = new TG_XmlNode(rootXmlNode, ownerDocument);
+		root = new TG_XmlNode(rootXmlNode);
 	}
 	
 	 

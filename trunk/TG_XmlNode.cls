@@ -25,7 +25,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
+ 
 /* 
  *  Element  class definition
  
@@ -49,7 +49,6 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	nodeName				Returns the name of a node, depending on its type	
 	nodeType				Returns the type of a node	
 	nodeValue				Sets or returns the value of a node, depending on its type	
-	ownerDocument			Returns the root element (document object) for a node	
 	parentNode				Returns the parent node of a node
 	prefix					Sets or returns the namespace prefix of a node	
 	previousSibling			Returns the node immediately before a node	
@@ -68,23 +67,24 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	lookupNamespaceURI()			Returns the namespace URI matching a specified prefix	
 	lookupPrefix()					Returns the prefix matching a specified namespace URI	
 	removeChild()					Removes a child node	
-	
+	cloneNode(boolean deep)			Clones a node	
 	
 	
 	TODO:
 	=====
 	Implement and add testMethods for each of the following, As spring 10 API doesn't have direct methods for doing so many of the
 	following methods might involve recursions etc to clone, compare and append/replace/insert child
-	
 	appendChild()					Adds a new child node to the end of the list of children of a node	
-	cloneNode()						Clones a node	
 	compareDocumentPosition()		Compares the document position of two nodes	
-	getFeature(feature,version)		Returns a DOM object which implements the specialized APIs of the specified feature and version
 	getUserData(key)				Returns the object associated to a key on a this node. The object must first have been set to this node by calling setUserData with the same key
-	insertBefore()					Inserts a new child node before an existing child node
 	isEqualNode()					Checks if two nodes are equal	
 	isSameNode()					Checks if two nodes are the same node	
-	replaceChild()					Replaces a child node	
+		
+	COSTLY TO ADD APIs for LATER CONSIDERATION
+	===========================================
+	insertBefore()					Inserts a new child node before an existing child node. TGERM: We can implement this but there is no such API from Spring 10 classes and doing this on
+									own might eat a lot of script statements.
+	replaceChild()					Replaces a child node. TGERM: we can't replace the same child again, because of the same reason, we might need to eat a lot of script statements to do so.		
 	
 	WILL NOT BE INCLUDED IN API
 	============================
@@ -94,8 +94,10 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	isSupported(feature,version)	Returns whether a specified feature is supported on a node
 	normalize()						Puts all text nodes underneath a node (including attributes) into a "normal" form where only structure (e.g., elements, comments, processing instructions, CDATA sections, and entity references) separates Text nodes, i.e., there are neither adjacent Text nodes nor empty Text nodes	
 	setUserData(key,data,handler)	Associates an object to a key on a node
-	text							Returns the text of a node and its descendants.	 
-	
+	text							Returns the text of a node and its descendants.
+	ownerDocument					Returns the root element (document object) for a node. TGERM: we are giving Root instead
+	getFeature(feature,version)		Returns a DOM object which implements the specialized APIs of the specified feature and version	 
+									
  */
 public virtual class TG_XmlNode {
 	public static final Integer DEPTH_TILL_LEAF = -1;
@@ -107,14 +109,8 @@ public virtual class TG_XmlNode {
  	*/
 	public Dom.XmlNode xmlNode {get;private set;}
 	
-	/*
-		Returns the root element (document object) for a node	
-	*/
-	public Dom.Document ownerDocument {get; private set;}
-		
-	public TG_XmlNode(Dom.XmlNode node, Dom.Document owner) {
+	public TG_XmlNode(Dom.XmlNode node) {
 		xmlNode = node;
-		ownerDocument = owner;
 	}
 	
 	/**
@@ -150,7 +146,7 @@ public virtual class TG_XmlNode {
 			childNodes = new List<TG_XmlNode>();
 			if (kidNodes != null && !kidNodes.isEmpty()) {
 				for (Dom.XmlNode kid: kidNodes )
-					childNodes.add(new TG_XmlNode(kid, ownerDocument));	
+					childNodes.add(new TG_XmlNode(kid));	
 			} 
 			return childNodes;
 		} protected set;
@@ -162,7 +158,7 @@ public virtual class TG_XmlNode {
 	public TG_XmlNode firstChild {
 		get {
 			Dom.XmlNode[] kids  = this.xmlNode.getChildren();
-			return kids != null && !kids.isEmpty() ? new TG_XmlNode(kids[0], ownerDocument) : null;
+			return kids != null && !kids.isEmpty() ? new TG_XmlNode(kids[0]) : null;
 		} protected set;
 	}
 	
@@ -172,7 +168,7 @@ public virtual class TG_XmlNode {
 	public TG_XmlNode lastChild {
 		get {
 			Dom.XmlNode[] kids  = this.xmlNode.getChildren();
-			return kids != null && !kids.isEmpty() ? new TG_XmlNode(kids[kids.size() - 1], ownerDocument) : null;
+			return kids != null && !kids.isEmpty() ? new TG_XmlNode(kids[kids.size() - 1]) : null;
 		} protected set;
 	}
 	
@@ -207,7 +203,7 @@ public virtual class TG_XmlNode {
 					}
 				}
 				if (thisNodeIdx >= 0 && thisNodeIdx < (kids.size() -1)) {
-					next = new TG_XmlNode(kids [thisNodeIdx + 1], ownerDocument);		
+					next = new TG_XmlNode(kids [thisNodeIdx + 1]);		
 				}	
 			}
 			return next;	
@@ -222,7 +218,7 @@ public virtual class TG_XmlNode {
 			Dom.XmlNode ret = this.xmlNode; 
 			while( ret.getParent() != null) { ret = ret.getParent(); } 		
 			// if one is at root return this otherwise create a new root element	
-			return ret == this.xmlNode ? this : new TG_XmlNode(ret, ownerDocument) ;	
+			return ret == this.xmlNode ? this : new TG_XmlNode(ret) ;	
 		} 
 	} 
 
@@ -232,7 +228,7 @@ public virtual class TG_XmlNode {
 	public TG_XmlNode parentNode {
 		get{
 			Dom.XmlNode p = xmlNode.getParent();
-			return p != null ? new TG_XmlNode(p, ownerDocument): null;
+			return p != null ? new TG_XmlNode(p): null;
 		} 
 		protected set;
 	}
@@ -267,7 +263,7 @@ public virtual class TG_XmlNode {
 					}
 				}
 				if (thisNodeIdx > 0) {
-					prev = new TG_XmlNode(kids [thisNodeIdx - 1], ownerDocument);		
+					prev = new TG_XmlNode(kids [thisNodeIdx - 1]);		
 				}	
 			}
 			
@@ -307,7 +303,7 @@ public virtual class TG_XmlNode {
 	*/
 	public String textContent{
 		get {
-			return getTextContents(xmlNode);
+			return TG_XmlUtils.getTextContents(xmlNode);
 		}
 		set {
 			Dom.XmlNode[] existing  = xmlNode.getChildren();
@@ -346,18 +342,10 @@ public virtual class TG_XmlNode {
 		who want more control on depth and maximum number of elements to be returned.
 	*/
 	public virtual List<TG_XmlNode> getElementsByTagName(String nam, Integer depth, Integer maxElements) {
-		Integer colonIdx = nam.indexOf(':');
-		String nameSpace = null;
-		if (colonIdx > 0 ) {
-			String nameSpacePrefix = nam.substring(0, colonIdx);
-			nam = nam.substring(colonIdx + 1);
-			System.debug(System.Logginglevel.Info, 'nameSpacePrefix:' +nameSpacePrefix);
-			nameSpace = this.xmlNode.getNamespaceFor(nameSpacePrefix);	
-		}
-		
-		return getElementsByTagName(nam, nameSpace, depth, maxElements);
+		TG_XmlUtils.NodeNameInfo nameInfo = TG_XmlUtils.getNamespaceFromNodeName(nam, this.xmlNode);
+		return getElementsByTagName(nameInfo.localName, nameInfo.namespaceURI, depth, maxElements);
 	}	
-	
+
 	/*
 		Returns all the Elements matching the specified tag name.
 		Though its an advanced form of standard method "getElementsByTagName" for developers, 
@@ -376,8 +364,6 @@ public virtual class TG_XmlNode {
 		if (xmlNode.getName().equalsIgnoreCase(nam) 
 			// If namespace if there match that too, otherwise ignore.
 				&& (nameSpace == null || (nameSpace != null && nameSpace.equalsIgnoreCase(xmlNode.getNamespace())))) ret.add(this);
-		
-		//System.debug('>> NODE:' + xmlNode.getName() + ' depth : ' + depth + ' max : ' + maxElements);
 		
 		// If we have reached till required depth, then return
 		if (depth == DEPTH_BASE) return ret;		
@@ -398,7 +384,7 @@ public virtual class TG_XmlNode {
 			// we are diving into kids so reduce the depth, if we don't need to dive till leaf
 			depth = depth == DEPTH_TILL_LEAF ? DEPTH_TILL_LEAF : depth - 1;
 			for (Dom.XmlNode kid: kids) {
-				TG_XmlNode kidElement = new TG_XmlNode(kid, ownerDocument);
+				TG_XmlNode kidElement = new TG_XmlNode(kid);
 				Integer childMaxElements = limitReturnedElements ? (maxElements - ret.size()) : MAX_ELEMENTS_TILL_LEAF;
 				//System.debug('>> KID-NODE:' + kidElement.xmlNode.getName() + ' depth : ' + depth + ' max : ' + childMaxElements);
 				ret.addAll(kidElement.getElementsByTagName(nam, nameSpace, depth, childMaxElements));
@@ -416,6 +402,14 @@ public virtual class TG_XmlNode {
 	public virtual List<TG_XmlNode> getElementsByTagName(String nam) {
 		return getElementsByTagName(nam, DEPTH_TILL_LEAF, MAX_ELEMENTS_TILL_LEAF);
 	}
+
+	/**
+		Returns all the Elements matching the specified tag name.
+	*/
+	public virtual List<TG_XmlNode> getElementsByTagNameNS (String namespaceURI, String nam) {
+		return getElementsByTagName(nam, namespaceURI, DEPTH_TILL_LEAF, MAX_ELEMENTS_TILL_LEAF);
+	}
+
 	
 	/*
 		Returns the namespace URI matching a specified prefix
@@ -467,55 +461,16 @@ public virtual class TG_XmlNode {
 	public virtual Boolean removeChild (TG_XmlNode child) {
 		return this.xmlNode.removeChild(child.xmlNode);
 	}
+	
+	public virtual TG_XmlNode cloneNode (boolean deep) {
+		// setting ownerdocument of cloned node as null, we don't want this
+		return new TG_XmlNode(TG_XmlUtils.clone(this.xmlNode, deep));
+	}
 
 	/*
 		Returns Xml Rep of this node
 	*/
 	public String toXmlString() {
-		String ns = xmlNode.getNamespace();
-		String prefix = ns == null ? '' : xmlNode.getPrefixFor(ns);
-		prefix = prefix == '' || prefix == null ? '' : prefix + ':';   
-		String xmlrep = '<' +  prefix + xmlNode.getName() ;
-		Integer attribCount = xmlNode.getAttributeCount();
-		for (Integer idx = 0 ; idx < attribCount ; idx ++) {
-			String aNs = xmlNode.getAttributeKeyNsAt(idx);
-			String aKey = xmlNode.getAttributeKeyAt(idx);
-			String aVal = xmlNode.getAttributeValue(aKey, aNs);
-			String aPrefix = '';
-			aPrefix = aNs == null ? '' : xmlNode.getPrefixFor(aNs);
-			aPrefix = aPrefix == '' || aPrefix == null ? '' : aPrefix + ':';
-			xmlrep += ' ' +aPrefix + aKey + '=\'' + aVal + '\'' ;
-		}
-		xmlrep += '>';
-		
-		Dom.XmlNode [] children = xmlNode.getChildren();
-		if (children != null && !children.isEmpty()) {
-			for (Dom.XmlNode child : children) {
-				if (child.getNodeType() == dom.XmlNodeType.TEXT) {
-					xmlrep += child.getText();
-				} else if (child.getNodeType() == dom.XmlNodeType.COMMENT) {
-					// do nothing !	
-				} else if (child.getNodeType() == dom.XmlNodeType.ELEMENT) {
-					xmlrep += new TG_XmlNode(child, ownerDocument).toXmlString();
-				}
-			}	
-		} 
-					
-		return xmlrep + '</' + prefix + xmlNode.getName() + '>';
-	}
-	
-	private static String getTextContents(Dom.XmlNode node) {
-		String textRep = '';
-		Dom.XmlNode [] children = node.getChildren();
-		if (children != null && !children.isEmpty()) {
-			for (Dom.XmlNode child : children) {
-				if (child.getNodeType() == dom.XmlNodeType.TEXT) {
-					textRep += ' ' + child.getText();
-				} else if (child.getNodeType() == dom.XmlNodeType.ELEMENT) {
-					textRep += ' ' + getTextContents(child);
-				}
-			}	
-		} 
-		return textRep.trim() ;
+		return TG_XmlUtils.toXmlString(xmlNode);
 	}
 }
