@@ -462,10 +462,34 @@ public virtual class TG_XmlNode {
 		return this.xmlNode.removeChild(child.xmlNode);
 	}
 	
+	/**
+		Clones this node.
+		@param deep to clone child nodes too.
+	*/
 	public virtual TG_XmlNode cloneNode (boolean deep) {
 		// setting ownerdocument of cloned node as null, we don't want this
 		return new TG_XmlNode(TG_XmlUtils.clone(this.xmlNode, deep));
 	}
+	
+	/**
+		Appends the given node to this node
+		@param nodeToAppend the node that will get appended
+		@return The node that was actually added
+	*/
+	public virtual TG_XmlNode appendChild (TG_XmlNode nodeToAppend) {
+		return appendChild(nodeToAppend.xmlNode);
+	}
+
+	/**
+		Appends the given node to this node
+		@param nodeToAppend the node that will get appended
+		@return The node that was actually added
+	*/
+	public virtual TG_XmlNode appendChild (Dom.XmlNode nodeToAppend) {
+		Dom.XmlNode ret = TG_XmlUtils.appendChild(this.xmlNode, nodeToAppend);
+		return ret != null ? new TG_XmlNode(ret) : null;
+	}
+
 
 	/*
 		Returns Xml Rep of this node

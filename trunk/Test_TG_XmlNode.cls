@@ -303,4 +303,30 @@ private class Test_TG_XmlNode {
  		// Attributes should be copied
  		System.assertEquals(book.getAttribute('category'), bookCloned.getAttribute('category'));
  	}
+ 	
+ 	static testMethod void testAppendChild() {
+		String xmlToAppend = '<book xmlns:x="http://www.w3schools.com/xml/" category="MODDED">' 
+										 + '<x:title x:lang="en">TGerm</x:title>' 
+										 + '<x:author>Abhinav Gupta</x:author>' 
+										 + '<x:year>2010</x:year>' 
+										 + '<x:price>100.00</x:price>' 
+									 + '</book>' ;
+								 	
+		TG_XmlDom dom = new TG_XmlDom(sampleXml);
+    	TG_XmlNode root = dom.root;
+	
+	    TG_XmlNode book = root.getElementByTagName('book');
+
+    	TG_XmlNode nodeToAppend = new TG_XmlDom(xmlToAppend).root;
+
+		root.appendChild(nodeToAppend);
+
+		TG_XmlNode[] books = root.getElementsByTagName('book');
+		
+		System.assertEquals(3, books.size());
+		System.assertEquals('Abhinav Gupta', books[2].getElementByTagName('author').nodeValue);
+		System.assertEquals('TGerm', books[2].getElementByTagName('title').nodeValue);
+		System.assertEquals('2010', books[2].getElementByTagName('year').nodeValue);
+		System.assertEquals('100.00', books[2].getElementByTagName('price').nodeValue);
+ 	}
 }
