@@ -100,17 +100,34 @@ public class TG_XmlUtils {
 		}
 	}
 	
+	public static Dom.XmlNode appendChild (Dom.XmlNode inNode, Dom.XmlNode nodeToAppend) {
+		Dom.XmlNode addedNode = null;
+		// Elements can only be added to ELEMENT Nodes. Other 2 supported by Spring 10 Apex XML DOM API
+		// are COMMENT and TEXT that can't have child nodes
+		// We are intentionally leaving the error handling upto Spring 10 API, I checked
+		// on such situations Xml DOM API throw System.Xmlexception
+		String nsURI = nodeToAppend.getNamespace();
+		String nsPrefix = nsURI != null ? nodeToAppend.getPrefixFor(nsURI) : null;
+		addedNode = inNode.addChildElement(nodeToAppend.getName(), nsURI, nsPrefix);
+		
+		// Copy attributes from the original node to the appended node.
+		copyAttributes(nodeToAppend, addedNode);
+		// copy the kids from the original to the appended node.
+		copyKids(nodeToAppend, addedNode); 
+		return addedNode;
+	}	
+	
 	public static Dom.XmlNode clone(Dom.XmlNode xmlNode, boolean deep) {
 		String nsURI = xmlNode.getNamespace();
 		String nsPrefix = nsURI != null ? xmlNode.getPrefixFor(nsURI) : null;
 		Dom.Document domc = new Dom.Document();
 		Dom.XmlNode cloned = domc.createRootElement(xmlNode.getName(), nsURI, nsPrefix);
-		copyAttributes(xmlNode, cloned);
 		
-		String xmlrep = '<' ;
+		// Copy the node attributes
+		copyAttributes(xmlNode, cloned);
+		// if deep clone, copy the kids too.
 		if (deep) copyKids(xmlNode, cloned); 
 		
-		System.debug(domc.toXmlString());
 		return cloned;
 	}
 	
