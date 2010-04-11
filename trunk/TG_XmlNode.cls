@@ -468,9 +468,8 @@ public virtual class TG_XmlNode {
 		// matching elements by tag name
 		List<TG_XmlNode> ret = new List<TG_XmlNode>();
 		// Check if this node is matching the mentioned tag name.
-		if (xmlNode.getName().equalsIgnoreCase(nam)) {
-			ret.add(this);
-		}
+		if (xmlNode.getName().equalsIgnoreCase(nam)) ret.add(this); 
+		
 		// Add kids and their kids
 		for (Dom.XmlNode kid: xmlNode.getChildElements()) {
 			if (kid.getChildElements().isEmpty()) {

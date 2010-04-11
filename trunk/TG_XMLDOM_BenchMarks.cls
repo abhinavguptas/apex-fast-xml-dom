@@ -34,8 +34,17 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 public class TG_XMLDOM_BenchMarks {
-	private static BenchmarkManager benchMarker = new BenchmarkManager ();
+	/**
+		- Change this to any other URL.
+		- Goto Setup > Security Controls > Remote Site Settings 
+			to white list the domain for your new xml sample.
+		
+		For making this sample work just whitelist "http://code.google.com"
+	*/
+	public static String XML_URL = 'http://code.google.com/feeds/p/apex-atom/svnchanges/basic';
 	
+	private static BenchmarkManager benchMarker = new BenchmarkManager ();
+		
 	public static void benchmark() {
 		String xml = loadSampleXML();
 		benchMark_XmlDom(xml);
@@ -52,7 +61,7 @@ public class TG_XMLDOM_BenchMarks {
 			Http h = new Http();
 			// Instantiate a new HTTP request, specify the method (GET) as well as the endpoint
 			HttpRequest req = new HttpRequest();
-			req.setEndpoint('http://code.google.com/feeds/p/apex-atom/svnchanges/basic');
+			req.setEndpoint(XML_URL);
 			req.setMethod('GET');
 			// Send the request, and return a response
 			HttpResponse res = h.send(req);
