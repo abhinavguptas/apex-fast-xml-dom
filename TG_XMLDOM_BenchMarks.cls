@@ -36,7 +36,17 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 public class TG_XMLDOM_BenchMarks {
 	private static BenchmarkManager benchMarker = new BenchmarkManager ();
 	
-	public static string loadSampleXML() {
+	public static void benchmark() {
+		String xml = loadSampleXML();
+		benchMark_XmlDom(xml);
+		benchMark_TG_XmlDom(xml);
+		
+		for (Benchmark b : benchMarker.benchmarks) {
+			System.debug(System.logginglevel.info, b.result);
+		}
+	}
+
+	private static string loadSampleXML() {
 		benchMarker.startOp('Http', 'send'); 
 			// Instantiate a new http object
 			Http h = new Http();
@@ -48,19 +58,9 @@ public class TG_XMLDOM_BenchMarks {
 			HttpResponse res = h.send(req);
 		benchMarker.endOp('-');
 		return res.getBody();	
-	}
+	}	
 	
-	public static void benchmark() {
-		String xml = loadSampleXML();
-		benchMark_XmlDom(xml);
-		benchMark_TG_XmlDom(xml);
-		
-		for (Benchmark b : benchMarker.benchmarks) {
-			System.debug(System.logginglevel.info, b.result);
-		}
-	}
-	
-	public static void benchMark_TG_XmlDom(String x) {
+	private static void benchMark_TG_XmlDom(String x) {
 		Integer nodeCount ;
 		benchMarker.startOp('TG_XmlDom', 'constructor'); 
 			TG_XmlDom dom = new TG_XmlDom(x);
@@ -71,7 +71,7 @@ public class TG_XMLDOM_BenchMarks {
 		benchMarker.endOp('nodeCount:' + nodeCount);
 	}
 
-	public static void benchMark_XmlDom(String x) {
+	private static void benchMark_XmlDom(String x) {
 		Integer nodeCount;  
 
 		benchMarker.startOp('XmlDom', 'constructor'); 
