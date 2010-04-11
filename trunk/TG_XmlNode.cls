@@ -100,8 +100,6 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 									
  */
 public virtual class TG_XmlNode {
-	public static final Integer DEPTH_TILL_LEAF = -1;
-	public static final Integer DEPTH_BASE = 0;
 	public static final Integer MAX_ELEMENTS_TILL_LEAF = -1; 
 	
 	/*
@@ -335,81 +333,29 @@ public virtual class TG_XmlNode {
 	public virtual String getAttribute(string name) {
 		return attributes.get(name); 
 	}
-	
-	/*
-		Returns all the Elements matching the specified tag name.
-		Though its an advanced form of standard method "getElementsByTagName" for developers, 
-		who want more control on depth and maximum number of elements to be returned.
-	*/
-	public virtual List<TG_XmlNode> getElementsByTagName(String nam, Integer depth, Integer maxElements) {
-		TG_XmlUtils.NodeNameInfo nameInfo = TG_XmlUtils.getNamespaceFromNodeName(nam, this.xmlNode);
-		return getElementsByTagName(nameInfo.localName, nameInfo.namespaceURI, depth, maxElements);
-	}	
-
-	/*
-		Returns all the Elements matching the specified tag name.
-		Though its an advanced form of standard method "getElementsByTagName" for developers, 
-		who want more control on namespace, depth and maximum number of elements to be returned.
-		
-		One can speed up the lookup, if he doesn't wants to 
-		digg till leaf now. For ex. if one is at root node and wants to 
-		get all matching child elements upto depth 2 only, then this param
-		can be used for this. 
-	*/
-	protected virtual List<TG_XmlNode> getElementsByTagName(String nam, String nameSpace, Integer depth, Integer maxElements) {
-		// matching elements by tag name
-		List<TG_XmlNode> ret = new List<TG_XmlNode>();
-		
-		// Check if this node is matching the mentioned tag name.
-		if (xmlNode.getName().equalsIgnoreCase(nam) 
-			// If namespace if there match that too, otherwise ignore.
-				&& (nameSpace == null || (nameSpace != null && nameSpace.equalsIgnoreCase(xmlNode.getNamespace())))) ret.add(this);
-		
-		// If we have reached till required depth, then return
-		if (depth == DEPTH_BASE) return ret;		
-
-		// This flag will enforce return of limited no. of elements, instead of 
-		// full fledged search inside DOM. Thi will speed up specially when one wants
-		// just the first element for a tag name
-		boolean limitReturnedElements = maxElements > 0;
-		// If required number of elements are fetched then return
-		if (limitReturnedElements && (ret.size() >= maxElements)) {
-			return ret;
-		}
-			
-						
-		// Add kids and their kids
-		Dom.XmlNode [] kids = xmlNode.getChildElements();
-		if (kids != null && !kids.isEmpty()) {
-			// we are diving into kids so reduce the depth, if we don't need to dive till leaf
-			depth = depth == DEPTH_TILL_LEAF ? DEPTH_TILL_LEAF : depth - 1;
-			for (Dom.XmlNode kid: kids) {
-				TG_XmlNode kidElement = new TG_XmlNode(kid);
-				Integer childMaxElements = limitReturnedElements ? (maxElements - ret.size()) : MAX_ELEMENTS_TILL_LEAF;
-				//System.debug('>> KID-NODE:' + kidElement.xmlNode.getName() + ' depth : ' + depth + ' max : ' + childMaxElements);
-				ret.addAll(kidElement.getElementsByTagName(nam, nameSpace, depth, childMaxElements));
-				
-				// if we have fetched the required number of elements that return
-				if (limitReturnedElements && ret.size() >= maxElements) break;
-			} 
-		}  
-		return ret;
-	}
 		
 	/**
 		Returns all the Elements matching the specified tag name.
 	*/
 	public virtual List<TG_XmlNode> getElementsByTagName(String nam) {
-		return getElementsByTagName(nam, DEPTH_TILL_LEAF, MAX_ELEMENTS_TILL_LEAF);
+		return getChildElementsByTagName(TG_XmlUtils.getNamespaceFromNodeName(nam, this.xmlNode), MAX_ELEMENTS_TILL_LEAF);
 	}
 
 	/**
 		Returns all the Elements matching the specified tag name.
 	*/
 	public virtual List<TG_XmlNode> getElementsByTagNameNS (String namespaceURI, String nam) {
-		return getElementsByTagName(nam, namespaceURI, DEPTH_TILL_LEAF, MAX_ELEMENTS_TILL_LEAF);
+		return getChildElementsByTagName(nam, namespaceURI);
 	}
 
+	/*
+		Returns single Element matching the specified tag name.
+	*/	 
+	public virtual TG_XmlNode getElementByTagName(String nam) {
+		List<TG_XmlNode> elem = getChildElementsByTagName(TG_XmlUtils.getNamespaceFromNodeName(nam, this.xmlNode), 1);
+		return elem != null && !elem.isEmpty() ? elem[0] : null;
+	}
+	
 	
 	/*
 		Returns the namespace URI matching a specified prefix
@@ -425,13 +371,6 @@ public virtual class TG_XmlNode {
 		return xmlNode.getPrefixFor(nsURI);
 	}
 							
-	/*
-		Returns single Element matching the specified tag name.
-	*/	 
-	public virtual TG_XmlNode getElementByTagName(String nam) {
-		List<TG_XmlNode> elem = getElementsByTagName(nam, DEPTH_TILL_LEAF, 1); 
-		return elem != null && !elem.isEmpty() ? elem[0] : null;
-	}
 	
 	/*
 		Returns true if a node has any attributes, otherwise it returns false	
@@ -497,4 +436,157 @@ public virtual class TG_XmlNode {
 	public String toXmlString() {
 		return TG_XmlUtils.toXmlString(xmlNode);
 	}
+	
+	/*
+		Returns all the Elements matching the specified tag name.
+		Though its an advanced form of standard method "getElementsByTagName" for developers, 
+		who want more control on depth and maximum number of elements to be returned.
+	*/
+	protected virtual List<TG_XmlNode> getChildElementsByTagName(TG_XmlUtils.NodeNameInfo nameInfo, Integer maxElements) {
+		if (nameInfo.namespaceURI == null) {
+			if (maxElements != MAX_ELEMENTS_TILL_LEAF) {
+				return getChildElementsByTagName(nameInfo.localName, maxElements);	
+			} else {
+				return getChildElementsByTagName(nameInfo.localName);
+			}
+		} else {
+			if (maxElements != MAX_ELEMENTS_TILL_LEAF) {
+				return getChildElementsByTagName(nameInfo.localName, nameInfo.namespaceURI, maxElements);	
+			} else {
+				return getChildElementsByTagName(nameInfo.localName, nameInfo.namespaceURI );
+			}
+		}
+	}	
+
+
+	/*
+		Returns all the Elements matching the specified tag name.
+		Though its an advanced form of standard method "getElementsByTagName" for developers, 
+		who want more control on namespace
+	*/
+	protected virtual List<TG_XmlNode> getChildElementsByTagName(String nam) {
+		// matching elements by tag name
+		List<TG_XmlNode> ret = new List<TG_XmlNode>();
+		// Check if this node is matching the mentioned tag name.
+		if (xmlNode.getName().equalsIgnoreCase(nam)) {
+			ret.add(this);
+		}
+		// Add kids and their kids
+		for (Dom.XmlNode kid: xmlNode.getChildElements()) {
+			if (kid.getChildElements().isEmpty()) {
+				if (kid.getName().equalsIgnoreCase(nam))
+					ret.add(new TG_XmlNode(kid));
+			} else {
+				ret.addAll(new TG_XmlNode(kid).getChildElementsByTagName(nam));
+			}
+		} 
+		return ret;
+	}
+
+	/*
+		Returns all the Elements matching the specified tag name.
+		Though its an advanced form of standard method "getElementsByTagName" for developers, 
+		who want more control on namespace
+	*/
+	protected virtual List<TG_XmlNode> getChildElementsByTagName(String nam, Integer maxElements) {
+		// This flag will enforce return of limited no. of elements, instead of 
+		// full fledged search inside DOM. Thi will speed up specially when one wants
+		// just the first element for a tag name
+		boolean limitReturnedElements = maxElements > 0;
+		// matching elements by tag name
+		List<TG_XmlNode> ret = new List<TG_XmlNode>();
+		// Check if this node is matching the mentioned tag name.
+		if (xmlNode.getName().equalsIgnoreCase(nam)) {
+			ret.add(this);
+			// If required number of elements are fetched then return
+			if (limitReturnedElements && (ret.size() >= maxElements)) {
+				return ret;
+			}
+		}
+		// Add kids and their kids
+		for (Dom.XmlNode kid: xmlNode.getChildElements()) {
+			if (kid.getChildElements().isEmpty()) {
+				if (kid.getName().equalsIgnoreCase(nam))
+					ret.add(new TG_XmlNode(kid));
+			} else {
+				ret.addAll(new TG_XmlNode(kid).getChildElementsByTagName(nam, (maxElements - ret.size())));
+			}
+			
+			// if we have fetched the required number of elements that return
+			if (limitReturnedElements && ret.size() >= maxElements) break;
+		} 
+		return ret;
+	}
+
+	/*
+		Returns all the Elements matching the specified tag name.
+		Though its an advanced form of standard method "getElementsByTagName" for developers, 
+		who want more control on namespace, maximum number of elements to be returned.
+	*/
+	protected virtual List<TG_XmlNode> getChildElementsByTagName(String nam, String nameSpace) {
+		// matching elements by tag name
+		List<TG_XmlNode> ret = new List<TG_XmlNode>();
+		
+		if (xmlNode.getName().equalsIgnoreCase(nam) 
+			&& (nameSpace == null || (nameSpace.equalsIgnoreCase(xmlNode.getNamespace())))) {// If namespace if there match that too, otherwise ignore.
+				
+			ret.add(this);
+		}
+						
+		// Add kids and their kids
+		for (Dom.XmlNode kid: xmlNode.getChildElements()) {
+			if (kid.getChildElements().isEmpty()) {
+				if (kid.getName().equalsIgnoreCase(nam) 
+					&& (nameSpace == null || (nameSpace.equalsIgnoreCase(kid.getNamespace()))))
+					ret.add(new TG_XmlNode(kid));
+			} else {
+				ret.addAll(new TG_XmlNode(kid).getChildElementsByTagName(nam, nameSpace));
+			}
+		} 
+		return ret;
+	}
+
+	/*
+		Returns all the Elements matching the specified tag name.
+		Though its an advanced form of standard method "getElementsByTagName" for developers, 
+		who want more control on namespace, maximum number of elements to be returned.
+	*/
+	protected virtual List<TG_XmlNode> getChildElementsByTagName(String nam, String nameSpace, Integer maxElements) {
+		// matching elements by tag name
+		List<TG_XmlNode> ret = new List<TG_XmlNode>();
+		
+		// This flag will enforce return of limited no. of elements, instead of 
+		// full fledged search inside DOM. Thi will speed up specially when one wants
+		// just the first element for a tag name
+		boolean limitReturnedElements = maxElements > 0;
+		
+		// Check if this node is matching the mentioned tag name.
+		if (xmlNode.getName().equalsIgnoreCase(nam) 
+			&& (nameSpace == null || (nameSpace.equalsIgnoreCase(xmlNode.getNamespace())))) {// If namespace if there match that too, otherwise ignore.
+				
+			ret.add(this);
+			// If required number of elements are fetched then return
+			if (limitReturnedElements && (ret.size() >= maxElements)) {
+				return ret;
+			}
+		}
+						
+		// Add kids and their kids
+		for (Dom.XmlNode kid: xmlNode.getChildElements()) {
+			if (kid.getChildElements().isEmpty()) {
+				if (kid.getName().equalsIgnoreCase(nam) 
+					&& (nameSpace == null || (nameSpace.equalsIgnoreCase(kid.getNamespace()))))
+					ret.add(new TG_XmlNode(kid));
+			} else {
+				ret.addAll(
+							new TG_XmlNode(kid).getChildElementsByTagName(nam, nameSpace, 
+								(maxElements - ret.size()))
+							);
+			}
+			// if we have fetched the required number of elements that return
+			if (limitReturnedElements && ret.size() >= maxElements) break;
+		} 
+		return ret;
+	}
+	
 }
