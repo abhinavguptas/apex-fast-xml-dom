@@ -58,17 +58,10 @@ private class Test_TG_XmlNode {
     	List<TG_XmlNode> books = root.getElementsByTagName('book');
     	System.assertEquals(2, books.size());
     	// with uptoLead flag as false
-    	List<TG_XmlNode> titles = root.getElementsByTagName('title', 1, TG_XmlNode.MAX_ELEMENTS_TILL_LEAF);
-    	System.assertEquals(0, titles.size());
-    	// this should digg till leaf for a tag
-    	titles = root.getElementsByTagName('title', 2, TG_XmlNode.MAX_ELEMENTS_TILL_LEAF);
-    	System.assertEquals(2, titles.size());
+    	List<TG_XmlNode> titles = null; 
     	
     	titles = root.getElementsByTagName('title');
     	System.assertEquals(2, titles.size());
-    	
-    	titles = root.getElementsByTagName('title', TG_XmlNode.DEPTH_TILL_LEAF, 1);
-    	System.assertEquals(1, titles.size());	    		    	
     }
 
     static testMethod void testGetElementsByTagNameNS() {
