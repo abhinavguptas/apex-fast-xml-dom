@@ -78,6 +78,10 @@ public class TG_XMLDOM_BenchMarks {
 		benchMarker.startOp('TG_XmlDom' , 'getElementsByTagName');
 			nodeCount = dom.root.getElementsByTagName('title').size();
 		benchMarker.endOp('nodeCount:' + nodeCount);
+		
+		benchMarker.startOp('TG_XmlDom' , 'getElementByTagName');
+			TG_XmlNode node = dom.root.getElementByTagName('title');
+		benchMarker.endOp('node:' + node.nodeName + ' = ' + node.nodeValue);
 	}
 
 	private static void benchMark_XmlDom(String x) {
@@ -90,6 +94,10 @@ public class TG_XMLDOM_BenchMarks {
 		benchMarker.startOp('XmlDom', 'getElementsByTagName');
 			nodeCount = xmlDom.root.getElementsByTagName('title').size();
 		benchMarker.endOp('nodeCount:' + nodeCount);
+		
+		benchMarker.startOp('XmlDom', 'getElementByTagName');
+			XMLDom.Element node = xmlDom.root.getElementByTagName('title');
+		benchMarker.endOp('node:' + node.nodeName + ' = ' + node.nodeValue);
 	}
 	
 	public class Benchmark {
